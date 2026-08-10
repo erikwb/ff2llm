@@ -1,0 +1,44 @@
+# Zig
+.zig-cache/
+zig-out/
+zig-cache/
+
+# Extracted game data (copyrighted — never commit)
+data/
+*.json.ripped
+
+# ROM images (copyrighted — never commit)
+*.smc
+*.sfc
+*.fig
+rom/*
+!rom/.gitkeep
+
+# Save games / runtime slots
+saves/
+*.sav
+
+# Local binaries / debug dumps
+baron_test
+*.o
+*.a
+
+# Editor / OS
+.DS_Store
+*.swp
+*~
+
+# Large AI weights (re-fetch with scripts/download_ai_assets.sh)
+models/**
+!models/README.md
+models/llm/
+models/whisper/
+models/piper/
+models/kokoro-en-v0_19/
+
+# Vendored third-party binaries (re-fetch with download script)
+vendor/piper/
+vendor/whisper/
+vendor/sherpa-onnx/lib/
+# Header is small and may be committed; lib is large shared objects.
+.venv-tts/
