@@ -1,49 +1,17 @@
-# ff4 — native FF2/FF4 scaffold (Zig)
+# ff4
 
-A portable **Zig** reimplementation scaffold for *Final Fantasy II* (US SNES) /
-*Final Fantasy IV*. It loads your legally obtained ROM, verifies it, extracts
-game tables, and includes a first port of the core **physical damage** math.
+A native reimplementation of **Final Fantasy II** (US SNES) / **Final Fantasy IV**, ported from the community decompilation and documentation—not reverse-engineered from scratch in this tree.
 
-This is **not** a complete game yet. It is the foundation for a data-driven
-native engine (Linux x86_64/ARM and other Zig targets).
+It is a decomp-faithful field and battle host **with AI-driven NPCs**: walk up to someone in Baron, speak, and get an in-character reply grounded in the ROM’s dialogue and story—not a generic chatbot skin on a JRPG.
 
-## Requirements
+## Sources
 
-- **Zig 0.16+**
-- **SDL3** (`sudo pacman -S sdl3` on Arch/CachyOS)
-- Your own **Final Fantasy II (US)** SNES ROM (`.smc` or `.sfc`)
+| Resource | Use |
+|----------|-----|
+| [everything8215/ff4](https://github.com/everything8215/ff4) | Primary SNES decompilation (field, battle, events, data layout) |
+| Community FF2US / FF4 reverse-engineering notes | Offsets, text encoding, map and battle tables |
 
-## Quick start
-
-```bash
-# from the repo root
-zig build
-
-# PLAY (overworld, towns/castles, NPCs, battles)
-zig build run -- play "Final Fantasy II.smc"
-# Controls: arrows/WASD move · Z/Enter talk/confirm · Esc back/quit
-# Walk into door tiles on the overworld to enter maps; doors/stairs inside work too.
-
-# verify your ROM (headered or headerless 1 MiB)
-zig build run -- verify "Final Fantasy II.smc"
-
-# dump tables
-zig build run -- dump "Final Fantasy II.smc" monsters 20
-zig build run -- dump "Final Fantasy II.smc" characters
-zig build run -- dump "Final Fantasy II.smc" items 30
-zig build run -- dump "Final Fantasy II.smc" commands
-
-# extract JSON for engine use (personal use only — do not redistribute)
-zig build run -- rip "Final Fantasy II.smc" data/ripped
-
-# experiment with damage math (ported from battle/damage.asm)
-zig build run -- sim-damage --atk 100 --def 20 --hits 2 --seed 42
-
-# unit tests (text codec, LoROM map, damage)
-zig build test
-```
-
-Installed binary: `zig-out/bin/ff4`.
+Behavior and data layout track that decomp wherever practical. Divergences are host concerns (SDL, audio I/O, local AI), not invented game rules.
 
 ## Supported ROMs
 
@@ -54,61 +22,29 @@ Installed binary: `zig-out/bin/ff4`.
 | Final Fantasy IV 1.0 (J) | `0x21027C5D` (identify only) |
 | Final Fantasy IV 1.1 (J) | `0xCAA15E97` (identify only) |
 
-English extractors are verified against **1.1 (U)**. Japanese name tables differ.
+English gameplay and extractors target **US Final Fantasy II**. Japanese ROMs may identify but are not fully supported.
 
-## Layout
+**You must supply your own legally obtained ROM.** No ROM or ripped game data is distributed with this project.
 
+## AI NPCs
+
+Talkable, local AI NPCs inside a decomp-faithful FF2 are a first-class part of this project—not a side demo.
+
+NPCs are meant to:
+
+- Stay in role and location (e.g. Castle Baron soldiers vs town greeters)
+- Use the game’s own dialogue and story context where we can supply it
+- Support spoken conversation (mic in, speech out) on the player’s machine
+
+## Build and run
+
+Requires **Zig 0.16+**, **SDL3**, and a US FF2 ROM.
+
+```bash
+zig build
+zig build run -- play "Final Fantasy II.smc"
 ```
-src/
-  main.zig           CLI (verify, dump, rip, sim-damage)
-  rom.zig            SMC strip, CRC32, LoROM, header
-  text.zig           FF2US font / name encoding
-  offsets.zig        English ROM table offsets
-  data.zig           Structured extractors
-  battle/
-    damage.zig       CalcHits / CalcDmg port
-```
-
-Offsets and structure notes come from community reverse engineering,
-especially [everything8215/ff4](https://github.com/everything8215/ff4).
 
 ## Legal
 
-- **No ROM or ripped game data is shipped in this repository.**
-- You must own a legal copy of the game to use the extractors.
-- Do not redistribute extracted JSON, graphics, music, or text.
-- Engine source is MIT (see `LICENSE`).
-
-## Roadmap (short)
-
-1. ~~ROM load / verify / dump / rip~~
-2. ~~Damage formula scaffold~~
-3. ~~Field maps / movement / NPCs / SDL3 / SPC~~
-4. ~~Random battles from ROM encounter tables (area-correct formations)~~
-5. Full attack power assembly (weapon, level, row, …)
-6. Battle AT + turn order, magic, multi-party
-7. Richer event scripts / treasures / shops
-8. Voice NPC polish
-
-## Battles (ROM reimplementation)
-
-**Goal:** reimplement the SNES battle program’s behavior, not invent an “FF4-style” system.
-
-Reference: [everything8215/ff4](https://github.com/everything8215/ff4) — `battle/battle.asm` (`ExecBattle` / `BattleMain` / `InitBattle`), `battle/init.asm`, `battle/fight.asm`, `field/rand_battle.asm`.
-
-| Layer | Status |
-|-------|--------|
-| Field encounter roll (rates/groups/formation id) | Ported from `rand_battle.asm` |
-| `BattleProp` types×counts + MonsterPos | Ported (`battle/prop.zig`) |
-| Object slots, action timers, pending action | Subset of DecTimers / GetPendingAction |
-| Fight (CalcHits/CalcDmg) + Run | Partial (`damage.asm`, `Cmd_00` / `Cmd_24`) |
-| Magic, items, AI scripts, full status timers | Not yet |
-| `ExecBtlGfx` (real sprites/BG/windows) | Placeholder present only |
-
-Module map: `src/battle/README.md`.
-
-## Credits
-
-- Original game © Square / Square Enix
-- Disassembly reference: [everything8215/ff4](https://github.com/everything8215/ff4)
-  (especially `field/rand_battle.asm`, `field/event.asm`, `battle/*`)
+Original game © Square / Square Enix. Engine source is intended for personal use with a ROM you own. Do not redistribute ROMs or extracted assets.
